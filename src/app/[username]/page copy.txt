@@ -1,0 +1,222 @@
+'use client';
+
+import { useParams, useRouter } from 'next/navigation';
+import { useFetch } from '@/hooks/useFetch';
+import useAuthStore from '@/store/useAuthStore';
+import { useFollow } from '@/hooks/useFollow';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { supabase } from '@/lib/supabaseConfig'; // Added missing import
+import Link from 'next/link';
+import ImageUploader from '@/components/ImageUploader';
+import AvatarComponent from '@/components/UserAvatar';
+
+export default function UserProfilePage() {
+  const { username } = useParams();
+  const router = useRouter();
+  const userData = useAuthStore(state => state.userData);
+
+  // Fetch user profile using `useFetch`
+  const { data: profile, isLoading } = useFetch('users', { username });
+
+  // Handle follow/unfollow using `useFollow`
+  const { isFollowing, followersCount, followingCount, loading: followLoading, toggleFollow } = useFollow(profile?.id, userData?.id);
+
+  const handleFollowClick = async () => {
+    if (!userData) return router.push('/auth/login');
+    await toggleFollow();
+  };
+
+  const handleProfileUpdate = async avatarUrl => {
+    try {
+      // Update user profile with new avatar_url
+      const { error } = await supabase.from('users').update({ avatar_url: avatarUrl }).eq('id', userData.id);
+
+      if (error) throw error;
+
+      // Update local state
+      useAuthStore.setState(state => ({
+        userData: { ...state.userData, avatar_url: avatarUrl }
+      }));
+
+      router.refresh();
+    } catch (error) {
+      console.error('Error updating profile:', error.message);
+      alert('Failed to update profile');
+    }
+  };
+
+  if (isLoading) return <div className="flex justify-center p-8">Loading...</div>;
+  if (!profile) return <div className="p-4">User not found</div>;
+
+  const isOwnProfile = userData?.id === profile.id;
+
+  return (
+    <Card className="max-w-2xl mx-auto mt-8">
+      <CardHeader>
+        <div className="flex items-start gap-4">
+          {/* {isOwnProfile ? (
+            <ImageUploader
+              bucketName="user-profile-images"
+              folderPath={userData?.id}
+              onUploadComplete={handleProfileUpdate}
+              defaultImage={profile.avatar_url}
+              buttonText="Update Photo"
+              previewSize="h-16 w-16"
+              profile={profile}
+            />
+          ) : (
+            <AvatarComponent profile={profile} />
+          )} */}
+          <AvatarComponent profile={profile} />
+          
+          <div className="flex-1">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-2xl font-bold">{profile.display_name}</h1>
+                <p className="text-gray-600">@{profile.username}</p>
+              </div>
+
+              {userData && !isOwnProfile ? (
+                <Button onClick={handleFollowClick} disabled={followLoading} variant={isFollowing ? 'outline' : 'default'}>
+                  {followLoading ? 'Loading...' : isFollowing ? 'Unfollow' : 'Follow'}
+                </Button>
+              ) : isOwnProfile ? (
+                <Button variant="outline" onClick={() => router.push('/settings')}>
+                  Edit Profile
+                </Button>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent>
+        <div className="flex gap-4 mb-4">
+          <div className="text-sm">
+            <Link href={`/${username}/followers`} className="font-semibold">
+              {followersCount} followers
+            </Link>
+          </div>
+          <div className="text-sm">
+            <Link href={`/${username}/following`} className="font-semibold">
+              {followingCount} following
+            </Link>
+          </div>
+        </div>
+
+        {profile.bio && (
+          <div className="mt-4">
+            <h2 className="text-lg font-semibold mb-2">Profile Info</h2>
+            <p className="text-gray-700">{profile.bio}</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+
+'use client';
+
+import { useParams, useRouter } from 'next/navigation';
+import { useFetch } from '@/hooks/useFetch';
+import useAuthStore from '@/store/useAuthStore';
+import { useFollow } from '@/hooks/useFollow';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { supabase } from '@/lib/supabaseConfig';
+import Link from 'next/link';
+import AvatarComponent from '@/components/UserAvatar';
+import FollowUnfollowButton from '@/components/FollowUnfollowButton';
+
+export default function UserProfilePage() {
+  const { username } = useParams();
+  const router = useRouter();
+  const userData = useAuthStore(state => state.userData);
+
+  // Fetch user profile using `useFetch`
+  const { data: profile, isLoading } = useFetch('users', { username });
+
+  // Use useFollow for follower/following counts only
+  const { followersCount, followingCount } = useFollow(profile?.id, userData?.id);
+
+  const handleProfileUpdate = async avatarUrl => {
+    try {
+      const { error } = await supabase.from('users').update({ avatar_url: avatarUrl }).eq('id', userData.id);
+
+      if (error) throw error;
+
+      useAuthStore.setState(state => ({
+        userData: { ...state.userData, avatar_url: avatarUrl }
+      }));
+
+      router.refresh();
+    } catch (error) {
+      console.error('Error updating profile:', error.message);
+      alert('Failed to update profile');
+    }
+  };
+
+  if (isLoading) return <div className="flex justify-center p-8">Loading...</div>;
+  if (!profile) return <div className="p-4">User not found</div>;
+
+  const isOwnProfile = userData?.id === profile.id;
+
+  return (
+    <Card className="max-w-2xl mx-auto mt-8">
+      <CardHeader>
+        <div className="flex items-start gap-4">
+          <AvatarComponent profile={profile} />
+
+          <div className="flex-1">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-2xl font-bold">{profile.display_name}</h1>
+                <p className="text-gray-600">@{profile.username}</p>
+              </div>
+
+              {!isOwnProfile ? (
+                <FollowUnfollowButton
+                  followingId={profile.id}
+                  initialIsFollowing={false} // This will be handled internally by the FollowUnfollowButton
+                  onFollowChange={() => {
+                    // Optionally refresh the page or update counts
+                    router.refresh();
+                  }}
+                />
+              ) : (
+                <Button variant="outline" onClick={() => router.push('/settings')}>
+                  Edit Profile
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent>
+        <div className="flex gap-4 mb-4">
+          <div className="text-sm">
+            <Link href={`/${username}/followers`} className="font-semibold">
+              {followersCount} followers
+            </Link>
+          </div>
+          <div className="text-sm">
+            <Link href={`/${username}/following`} className="font-semibold">
+              {followingCount} following
+            </Link>
+          </div>
+        </div>
+
+        {profile.bio && (
+          <div className="mt-4">
+            <h2 className="text-lg font-semibold mb-2">Profile Info</h2>
+            <p className="text-gray-700">{profile.bio}</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
