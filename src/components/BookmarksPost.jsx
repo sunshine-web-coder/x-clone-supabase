@@ -1,17 +1,19 @@
 'use client';
 
 import { useFetchBookmarkedPosts } from '@/hooks/useFetchBookmarkedPosts';
-import PostCard from './post-card';
+import PostCard from './PostCard';
+import GoBack from './GoBack';
+import Loader from './Loader';
 
 export default function BookmarksPost() {
   const { data: bookmarkedPosts, isLoading, isError, error } = useFetchBookmarkedPosts();
 
-  if (isLoading) return <p>Loading bookmarks...</p>;
+  if (isLoading) return <Loader />;
   if (isError) return <p>Error: {error.message}</p>;
 
   return (
-    <section className="p-4">
-      <h1 className="text-xl font-bold mb-4">Your Bookmarked Posts</h1>
+    <section>
+      <GoBack title="Bookmark" />
       {bookmarkedPosts?.length > 0 ? (
         <div className="space-y-4">
           {bookmarkedPosts.map(({ post_id, posts }) => {
@@ -33,7 +35,7 @@ export default function BookmarksPost() {
           })}
         </div>
       ) : (
-        <p>No bookmarks found.</p>
+        <p className="text-center">No bookmarks found.</p>
       )}
     </section>
   );

@@ -9,38 +9,32 @@ import UserAvatar from './UserAvatar';
 import useAuthStore from '@/store/useAuthStore';
 import { supabase } from '@/lib/supabaseConfig';
 import usePostStore from '@/store/usePostStore';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/lib/toast-context';
+import { MdOutlineGifBox } from "react-icons/md";
+import IsReply from './IsReply';
 
 const MAX_CONTENT_LENGTH = 280;
 const MAX_IMAGES = 4;
 
-export function ComposeTweet() {
-  const [content, setContent] = useState('');
+export function ComposeTweet({ parentId = null, parentUsername = null, isReply = false, onSuccess = () => {}, initialContent = '' }) {
+  const [content, setContent] = useState(initialContent);
   const [images, setImages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
-  const { user } = useAuthStore();
-  const addPost = usePostStore(state => state.addPost);
-  // const { toast } = useToast()
+  const { sessionId } = useAuthStore();
+  const { addPost, incrementReplyCount } = usePostStore();
+  const { addToast } = useToast();
 
   const handleSubmit = async e => {
     e.preventDefault();
 
-    if (!user) {
-      toast({
-        title: 'Authentication Required',
-        description: 'You must be logged in to post.',
-        variant: 'destructive'
-      });
+    if (!sessionId) {
+      addToast('Authentication Required.', 'error');
       return;
     }
 
     if (!content.trim() && images.length === 0) {
-      toast({
-        title: 'Invalid Post',
-        description: 'Please add some content or media to your post.',
-        variant: 'destructive'
-      });
+      addToast('Invalid Post: Please add content or media.', 'error');
       return;
     }
 
@@ -52,7 +46,7 @@ export function ComposeTweet() {
         images.map(async image => {
           if (image.type === 'image') {
             const uniqueFileName = `${Date.now()}-${crypto.randomUUID()}-${image.file.name}`;
-            const filePath = `${user.id}/${uniqueFileName}`;
+            const filePath = `${sessionId}/${uniqueFileName}`;
 
             const { data, error } = await supabase.storage.from('media_uploads').upload(filePath, image.file, {
               cacheControl: '3600',
@@ -70,34 +64,35 @@ export function ComposeTweet() {
       );
 
       const newPost = {
-        user_id: user.id,
+        user_id: sessionId,
         content: content.trim(),
         media_urls: mediaUrls,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        parent_id: parentId
       };
 
       const { data, error } = await supabase.from('posts').insert([newPost]).select().single();
 
       if (error) throw error;
 
-      // Add post to local state with the DB-generated ID
+      // Update local state
       addPost({ ...newPost, id: data.id });
 
-      // Reset form
+      // Update reply count if this is a reply
+      if (parentId) {
+        incrementReplyCount(parentId);
+      }
+
+      // Reset form and trigger success callback
       setContent('');
       setImages([]);
+      onSuccess();
 
-      toast({
-        title: 'Success',
-        description: 'Your post has been published!'
-      });
+      // addToast(isReply ? 'Your post was sent' : 'Your post was sent', 'success');
+      addToast('Your post was sent', 'success');
     } catch (error) {
       console.error('Error creating post:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to create post. Please try again.',
-        variant: 'destructive'
-      });
+      addToast(`Error: Failed to post. Please try again.`, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -113,26 +108,12 @@ export function ComposeTweet() {
       }));
 
     if (files.length + images.length > MAX_IMAGES) {
-      toast({
-        title: 'Too many images',
-        description: `You can only upload up to ${MAX_IMAGES} images.`,
-        variant: 'destructive'
-      });
+      addToast(`Too many images: Maximum ${MAX_IMAGES} allowed.`, 'error');
       return;
     }
 
     setImages(prevImages => [...prevImages, ...files].slice(0, MAX_IMAGES));
     fileInputRef.current.value = ''; // Reset input
-  };
-
-  const handleGifSelect = selectedGif => {
-    const gifImage = {
-      id: crypto.randomUUID(),
-      type: 'gif',
-      url: selectedGif.images.original.url,
-      title: selectedGif.title
-    };
-    setImages([gifImage]); // Replace existing images with GIF
   };
 
   const removeImage = id => {
@@ -143,68 +124,75 @@ export function ComposeTweet() {
   const isOverLimit = characterCount > MAX_CONTENT_LENGTH;
 
   return (
-    <div className="px-2 border-y border-zinc-600">
-      <div className="p-4 py-2 text-[var(--white)]">
-        <form onSubmit={handleSubmit}>
-          <div className="flex gap-4">
-            <UserAvatar />
-            <div className="flex-1">
-              <div className="relative">
-                <AutoGrowingTextarea
-                  value={content}
-                  onChange={e => setContent(e.target.value)}
-                  placeholder="What is happening?!"
-                  className={`text-sm placeholder:text-gray-500 mt-2 leading-6 min-h-[30px] max-h-[300px] ${isOverLimit ? 'border-red-500 focus:border-red-500' : ''}`}
-                  maxHeight={300}
-                  aria-label="Tweet content"
+    <div className="compose-tweet">
+      {isReply && parentUsername && (
+        <IsReply parentUsername={parentUsername}/>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <div className="flex gap-4">
+          <UserAvatar />
+          <div className="flex-1">
+            <div className="relative">
+              <AutoGrowingTextarea
+                value={content}
+                onChange={e => setContent(e.target.value)}
+                placeholder={isReply ? 'Post your reply' : 'What is happening?!'}
+                className={`text-sm placeholder:text-gray-500 mt-2 leading-6 min-h-[30px] max-h-[300px] ${isOverLimit ? 'border-red-500 focus:border-red-500' : ''}`}
+                maxHeight={300}
+                aria-label={isReply ? 'Reply content' : 'Post content'}
+                disabled={isSubmitting}
+                autoFocus={isReply}
+              />
+            </div>
+
+            <ImagePreview images={images} onRemove={removeImage} disabled={isSubmitting} />
+
+            <div className="flex items-center justify-between mt-2">
+              <div className="flex text-[var(--white)]">
+                <input type="file" ref={fileInputRef} onChange={handleImageUpload} multiple accept="image/*" className="hidden" disabled={isSubmitting} />
+                <Button
+                  type="button"
+                  className="media-button text-xs flex gap-1 p-0 h-8 w-8 rounded-full hover:bg-blue-500/10 bg-transparent font-normal items-center text-blue-500 disabled:opacity-50"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isSubmitting || images.length >= MAX_IMAGES}
+                >
+                  <UploadIcon className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  className="text-xs flex gap-1 p-0 h-8 w-8 rounded-full hover:bg-blue-500/10 bg-transparent font-normal items-center text-blue-500 disabled:opacity-50"
+                  disabled={isSubmitting || images.length > 0}
+                >
+                  <MdOutlineGifBox className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  className="text-xs flex gap-1 px-0 h-8 w-8 rounded-full hover:bg-blue-500/10 bg-transparent font-normal items-center text-blue-500 disabled:opacity-50"
                   disabled={isSubmitting}
-                />
+                >
+                  <Smile className="h-4 w-4" />
+                </Button>
               </div>
 
-              <ImagePreview images={images} onRemove={removeImage} disabled={isSubmitting} />
-
-              <div className="flex items-center justify-between mt-2">
-                <div className="flex text-[var(--white)] gap-2">
-                  <input type="file" ref={fileInputRef} onChange={handleImageUpload} multiple accept="image/*" className="hidden" disabled={isSubmitting} />
-                  <Button
-                    type="button"
-                    className="text-xs flex gap-1 px-1 h-8 py-1 bg-transparent font-normal items-center text-[#35ae2a] hover:text-[#35ae2a]/75 hover:bg-transparent disabled:opacity-50"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isSubmitting || images.length >= MAX_IMAGES}
-                  >
-                    <UploadIcon className="h-4 w-4" />
-                    <span>Media</span>
-                  </Button>
-                  <Button
-                    type="button"
-                    className="text-xs flex gap-1 px-2 h-8 py-1 bg-transparent font-normal items-center text-[#35ae2a] hover:text-[#35ae2a]/75 hover:bg-transparent disabled:opacity-50"
-                    disabled={isSubmitting || images.length > 0}
-                  >
-                    <FileGif className="h-4 w-4" />
-                    <span>GIF</span>
-                  </Button>
-                  <Button type="button" className="text-xs flex gap-1 px-2 h-8 py-1 bg-transparent font-normal items-center text-[#35ae2a] hover:text-[#35ae2a]/75 hover:bg-transparent disabled:opacity-50" disabled={isSubmitting}>
-                    <Smile className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="flex gap-2 items-center justify-end">
+              <div className="flex gap-2 items-center justify-end">
+                {characterCount > 0 && (
                   <span className={`text-[10px] font-semibold ${isOverLimit ? 'text-red-500' : characterCount > MAX_CONTENT_LENGTH * 0.8 ? 'text-yellow-500' : ''}`}>
                     {characterCount}/{MAX_CONTENT_LENGTH}
                   </span>
-                  <Button
-                    type="submit"
-                    className="bg-[#35ae2a] hover:bg-[#35ae2a]/90 text-[var(--white)] min-w-[80px] rounded-full px-4 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={isSubmitting || isOverLimit || (!content.trim() && images.length === 0)}
-                  >
-                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Post'}
-                  </Button>
-                </div>
+                )}
+                <Button
+                  type="submit"
+                  className="submit-button bg-[#EFF3F4] text-[var(--black)] min-w-[70px] min-h-[25px] rounded-full px-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSubmitting || isOverLimit || (!content.trim() && images.length === 0)}
+                >
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : isReply ? 'Reply' : 'Post'}
+                </Button>
               </div>
             </div>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 }

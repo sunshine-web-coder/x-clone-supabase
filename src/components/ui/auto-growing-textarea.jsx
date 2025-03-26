@@ -43,7 +43,7 @@ export function AutoGrowingTextarea({
         adjustHeight()
       }}
       placeholder={placeholder}
-      className={`w-full resize-none text-red-500 overflow-hidden bg-transparent outline-none ${className}`}
+      className={`w-full resize-none text-[var(--white)] overflow-hidden bg-transparent outline-none ${className}`}
       rows={1}
       {...props}
     />

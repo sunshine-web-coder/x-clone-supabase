@@ -1,20 +1,20 @@
 'use client';
 
-import { useFetchPostById } from '@/routes/useFetchPosts';
+import { useFetchPostWithReplies } from '@/routes/useFetchPosts'; // Updated import
 import { useParams } from 'next/navigation';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import SinglePostCard from '@/components/single-post-card';
+import GoBack from '@/components/GoBack';
+import PostCard from '@/components/PostCard';
+import { Loader2 } from 'lucide-react';
 
 export default function SinglePostPage() {
   const params = useParams();
-  const { data: post, isLoading, error } = useFetchPostById(params.id);
+  const { data, isLoading, error } = useFetchPostWithReplies(params.id); // Updated hook
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-lg">Loading post...</p>
+      <div className="flex justify-center mt-5">
+        <Loader2 className="w-6 h-6 text-sky-500 animate-spin" />
       </div>
     );
   }
@@ -27,33 +27,24 @@ export default function SinglePostPage() {
     );
   }
 
-  return (
-    <div className="container mx-auto py-8">
-      <Button variant="ghost" className="mb-6">
-        Post
-      </Button>
+  const { post, replies } = data || {};
 
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <div className="flex items-center gap-4 mb-4">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={post.profiles?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${post.profiles?.display_name}`} />
-              <AvatarFallback>{post.profiles?.display_name?.slice(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <span>{post.profiles?.display_name}</span>
-                <span>{post.profiles?.username}</span>
-                <span>•</span>
-                <span>{new Date(post.created_at).toLocaleDateString()}</span>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-700 whitespace-pre-wrap">{post.content}</p>
-        </CardContent>
-      </Card>
+  return (
+    <div className="container mx-auto">
+      <GoBack title="Post" />
+      {/* Main Post Card */}
+      {post && <SinglePostCard id={post.id} content={post.content} media_urls={post.media_urls} created_at={post.created_at} profiles={post.profiles} />}
+
+      {/* Display Replies */}
+      {replies && replies.length > 0 ? (
+        <div className="">
+          {replies.map(reply => (
+            <PostCard key={reply.id} id={reply.id} content={reply.content} media_urls={reply.media_urls} created_at={reply.created_at} profiles={reply.profiles} />
+          ))}
+        </div>
+      ) : (
+        <p className="mt-4 text-gray-500 text-center">No replies yet.</p>
+      )}
     </div>
   );
 }

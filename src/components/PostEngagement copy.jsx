@@ -7,27 +7,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseConfig';
 import useAuthStore from '@/store/useAuthStore';
 import { PopoverAction } from './PopoverAction';
-import usePostStore from '@/store/usePostStore';
 
-export default function PostEngagement({ postId, setShowReply }) {
+export default function PostEngagement({ postId }) {
   const { sessionId } = useAuthStore();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkCount, setBookmarkCount] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [viewCount, setViewCount] = useState(0);
-  const [replyCount, setReplyCount] = useState(0);
-
-    // Add this to get replies count from Zustand
-    const posts = usePostStore(state => state.posts);
-  
-    // New effect to track replies count
-    useEffect(() => {
-      const post = posts.find(p => p.id === postId);
-      if (post) {
-        setReplyCount(post.replies?.length || 0);
-      }
-    }, [posts, postId]);
 
   // Add view count fetch
   const fetchViewCount = useCallback(async () => {
@@ -141,22 +128,22 @@ export default function PostEngagement({ postId, setShowReply }) {
       icon: Mail,
       label: 'Send via Direct Message',
       href: '/messages/compose?tweet=123456789'
-    }
+    },
   ];
 
-  // Retweet menu items with both buttons and links
-  const retweetMenuItems = [
-    { icon: Repeat, label: 'Repost' },
-    { icon: PencilLine, label: 'Quote' }
-  ];
+    // Retweet menu items with both buttons and links
+    const retweetMenuItems = [
+      { icon: Repeat, label: "Repost" },
+      { icon: PencilLine, label: "Quote" },
+    ]
 
   return (
-    <div className="flex justify-between items-center text-gray-500" onClick={e => e.stopPropagation()}>
+    <div className="flex justify-between items-center mt-4 text-gray-500 pl-[55px]" onClick={e => e.stopPropagation()}>
       <div className="flex items-center text-sm group">
-        <Button variant="variant" size="icon" className="h-8 w-8 rounded-full group-hover:bg-blue-500/10 group-hover:text-blue-500" onClick={() => setShowReply(true)}>
+        <Button variant="variant" size="icon" className="h-8 w-8 rounded-full group-hover:bg-blue-500/10 group-hover:text-blue-500">
           <MessageCircle className="h-5 w-5" />
         </Button>
-        <span className="group-hover:text-blue-500">{replyCount}</span>
+        <span className='group-hover:text-blue-500'>4k</span>
       </div>
 
       <PopoverAction menuItems={retweetMenuItems} onItemClick={handlePopoverItemClick}>

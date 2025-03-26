@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabaseConfig';
 import useAuthStore from '@/store/useAuthStore';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 export default function FollowUnfollowButton({ profile, followingId, initialIsFollowing = false, onFollowChange = () => {}, className = '' }) {
   const { sessionId, isAuthenticated } = useAuthStore();

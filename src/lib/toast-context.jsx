@@ -9,15 +9,17 @@ const ToastContext = createContext(null);
 // Toast component
 function Toast({ message, type, onClose }) {
   return (
-    <div className={`flex items-center justify-between p-3 mb-3 rounded-md shadow-md ${
-      type === 'success' ? 'bg-green-100 text-green-800' : 
-      type === 'error' ? 'bg-red-100 text-red-800' : 
-      'bg-blue-100 text-blue-800'
-    }`}>
-      <span>{message}</span>
-      <button onClick={onClose} className="ml-2 p-1 rounded-full hover:bg-gray-200">
-        <X size={16} />
-      </button>
+    <div className="fixed bottom-0 flex items-center justify-center w-full">
+      <div
+        className={`flex text-xs max-w-max items-center bg-blue-500 text-white justify-between p-2 mb-3 rounded-md shadow-md ${
+          type === 'success' ? 'bg-blue-500 text-white' : type === 'error' ? 'bg-blue-500 text-white' : 'bg-blue-500 text-white'
+        }`}
+      >
+        <span>{message}</span>
+        <button onClick={onClose} className="ml-2 p-1 rounded-full">
+          <X size={16} />
+        </button>
+      </div>
     </div>
   );
 }
@@ -39,21 +41,16 @@ export function ToastProvider({ children }) {
     return id;
   };
 
-  const removeToast = (id) => {
+  const removeToast = id => {
     setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
   };
 
   return (
     <ToastContext.Provider value={{ addToast, removeToast }}>
       {children}
-      <div className="fixed top-4 right-4 z-50 flex flex-col">
+      <div className="fixed z-50 flex flex-col">
         {toasts.map(toast => (
-          <Toast 
-            key={toast.id} 
-            message={toast.message} 
-            type={toast.type} 
-            onClose={() => removeToast(toast.id)} 
-          />
+          <Toast key={toast.id} message={toast.message} type={toast.type} onClose={() => removeToast(toast.id)} />
         ))}
       </div>
     </ToastContext.Provider>

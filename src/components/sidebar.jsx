@@ -3,13 +3,15 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Search, Bell, Mail, BookmarkIcon, User, MoreHorizontal, Twitter } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import Logout from './Logout';
 import useAuthStore from '@/store/useAuthStore';
 import Skeleton from 'react-loading-skeleton';
 import { useCurrentUser } from '@/routes/userService'; // Import the new hook
+import { cn } from '@/lib/utils';
+import { FaXTwitter } from 'react-icons/fa6';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -51,13 +53,13 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-56 sticky top-0 hidden md:block h-screen border-r border-zinc-600">
-      <div className="sticky top-0 left-0 bottom-0 flex flex-col justify-between h-screen p-2">
-        <div className="space-y-2">
-          <Link href="/" className="mb-6 max-w-max block text-xl pl-4 font-bold text-[var(--white)]">
-            <Twitter className="h-8 w-8" />
+    <aside className="lg:w-[300px] sticky top-0 h-screen hidden sm:block">
+      <div className="flex flex-col justify-between h-full p-2">
+        <div className="space-y-2 pr-0 lg:pr-6">
+          <Link href="/home" className="mb-4 mt-1 max-w-max block text-xl pl-4 font-bold text-[var(--white)]">
+            <FaXTwitter className="h-7 w-7" />
           </Link>
-          <nav className="space-y-1">
+          <nav className="">
             {sidebarItems.map(item => {
               const Icon = item.icon;
               const isActive = pathname === item.href || (item.name === 'Profile' && pathname.includes(`/${userData?.username}`));
@@ -66,21 +68,28 @@ export default function Sidebar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-base transition-colors text-[var(--white)] hover:bg-[#161616] ${isActive ? 'font-bold' : 'font-normal'}`}
+                  className={`flex max-w-max lg:max-w-full items-center gap-4 rounded-full px-4 py-2 text-base transition-colors text-[var(--white)] hover:bg-[#161616] ${
+                    isActive ? 'font-bold' : 'font-normal'
+                  }`}
                 >
-                  <Icon className="h-5 w-5" />
-                  <span>{item.name}</span>
+                  <Icon className="h-6 w-6" />
+                  <span className="hidden lg:block">{item.name}</span>
                 </Link>
               );
             })}
-            <Button className="max-w-full rounded-full bg-[var(--white)] hover:bg-gray-100 p-4 text-base font-bold text-[var(--black)]">Post</Button>
+            <Link
+              href="/compose/posts"
+              className={cn(buttonVariants({ variant: 'ghost' }), 'max-w-full mt-2 hidden lg:flex rounded-full bg-[var(--white)] hover:bg-gray-100 p-5 text-base font-bold text-[var(--black)]')}
+            >
+              Post
+            </Link>
           </nav>
         </div>
 
         <div className="flex-shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex w-full items-center gap-2 rounded-full p-3 py-2 outline-none text-left transition-colors hover:bg-[#141414]">
+              <button className="flex w-full items-center gap-2 rounded-full p-2 outline-none text-left transition-colors hover:bg-[#141414]">
                 <Avatar className="h-10 w-10">
                   {isLoading ? (
                     <AvatarFallback>
@@ -93,7 +102,7 @@ export default function Sidebar() {
                     </>
                   )}
                 </Avatar>
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 overflow-hidden hidden lg:block">
                   {isLoading ? (
                     <>
                       <Skeleton className="w-full h-4 mb-1" />
@@ -106,10 +115,10 @@ export default function Sidebar() {
                     </>
                   )}
                 </div>
-                <MoreHorizontal className="h-5 w-5 text-[var(--white)]" />
+                <MoreHorizontal className="h-5 w-5 text-[var(--white)] hidden lg:block" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[240px] shadow-sm border-[#141414] text-[var(--white)] p-0 bg-[var(--background)]">
+            <DropdownMenuContent className="w-[240px] justify-start shadow-sm border-[#141414] text-[var(--white)] p-0 bg-[var(--background)]">
               <DropdownMenuItem className="p-0">
                 <Button className="bg-transparent hover:bg-[#141414] items-start justify-start font-normal text-[var(--white)] rounded-none p-2 w-full">List</Button>
               </DropdownMenuItem>

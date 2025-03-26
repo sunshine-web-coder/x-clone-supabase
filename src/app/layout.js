@@ -22,13 +22,14 @@ export const metadata = {
   description: "X. It's what's happening / X"
 };
 
-export default async function RootLayout({ children }) {
+export default async function RootLayout({ children, modal }) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} bg-[var(--background)] antialiased`}>
         <QueryProvider>
           <ToastProvider>
-            <main style={{ position: 'relative' }}>{children}</main>
+            {children}
+            {modal}
           </ToastProvider>
         </QueryProvider>
       </body>

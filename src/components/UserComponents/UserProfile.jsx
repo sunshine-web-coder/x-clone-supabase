@@ -12,11 +12,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useFollowStatus } from '@/hooks/useFollowStatus';
 import Sidebar from '@/components/sidebar';
 import RightContent from '@/components/RightContent';
-import AuthLayout from '@/components/AuthLayout';
-import { ArrowLeft } from 'lucide-react';
+import AuthLayout from '@/components/Layouts/MainLayout';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import UserProfileTop from './UserProfileTop';
 import CoverImage from './CoverImage';
+import GoBack from '../GoBack';
 
 export default function UserProfile() {
   const { username, id } = useParams();
@@ -59,7 +60,12 @@ export default function UserProfile() {
     }
   };
 
-  if (isLoading) return <div className="flex justify-center p-8">Loading...</div>;
+  if (isLoading)
+    return (
+      <div className="flex justify-center mt-5">
+        <Loader2 className="w-6 h-6 text-sky-500 animate-spin" />
+      </div>
+    );
   if (error) return <div className="p-4">Error loading profile</div>;
   if (!profile) return <div className="p-4">User not found</div>;
 
@@ -69,16 +75,8 @@ export default function UserProfile() {
     <>
       {shouldShowUserProfile && (
         <div>
-          <div className="border-none flex gap-3 px-3 p-4 py-1">
-            <div className="sticky left-0 right-0 top-0">
-              <Button variant="outline" size="icon" className="border-none w-[30px] h-[30px] p-3 rounded-full hover:bg-gray-900">
-                <ArrowLeft className="text-[var(--white)]" />
-              </Button>
-            </div>
-            <div className="text-[var(--white)]">
-              <h1 className="text-base font-semibold">{profile.display_name}</h1>
-              <p className="text-xs text-[var(--textSubtitle)]">{postsCount.toLocaleString()} posts</p>
-            </div>
+          <div className="border-none mb-3 sticky top-0 z-50">
+            <GoBack title={`${profile.display_name}`} subtitle={`${postsCount.toLocaleString()} posts`} />
           </div>
           <Separator className="bg-zinc-700" />
           <div className="relative">
