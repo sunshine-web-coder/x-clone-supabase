@@ -1,7 +1,7 @@
 import { ComposeTweet } from '@/components/compose-tweet';
 import RightContent from '@/components/RightContent';
 import Sidebar from '@/components/sidebar';
-import { PostFeed } from '@/components/PostFeed';
+import { PostFeed } from '@/components/post/PostFeed';
 import Link from 'next/link';
 import React from 'react';
 

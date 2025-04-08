@@ -2,9 +2,9 @@
 
 import { useFetchPostWithReplies } from '@/routes/useFetchPosts'; // Updated import
 import { useParams } from 'next/navigation';
-import SinglePostCard from '@/components/single-post-card';
+import SinglePostCard from '@/components/post/SinglePostCard';
 import GoBack from '@/components/GoBack';
-import PostCard from '@/components/PostCard';
+import PostCard from '@/components/post/PostCard';
 import { Loader2 } from 'lucide-react';
 
 export default function SinglePostPage() {

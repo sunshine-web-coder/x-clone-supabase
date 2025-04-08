@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Bell, Mail, BookmarkIcon, User, MoreHorizontal, Twitter } from 'lucide-react';
+import { Home, Search, Bell, Mail, BookmarkIcon, User, MoreHorizontal } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';

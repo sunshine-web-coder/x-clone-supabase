@@ -3,7 +3,7 @@
 import { Loader2 } from 'lucide-react';
 import { useFetchMainPosts } from '@/routes/useFetchPosts'; // Updated import
 import PostCard from './PostCard';
-import Loader from './Loader';
+import Loader from '../Loader';
 
 export function PostFeed() {
   const { data: mainPosts, isLoading, isError } = useFetchMainPosts(); // Updated hook

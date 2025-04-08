@@ -1,7 +1,7 @@
 'use client';
 
 import { useFetchBookmarkedPosts } from '@/hooks/useFetchBookmarkedPosts';
-import PostCard from './PostCard';
+import PostCard from './post/PostCard';
 import GoBack from './GoBack';
 import Loader from './Loader';
 

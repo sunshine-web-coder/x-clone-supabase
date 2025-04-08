@@ -5,16 +5,12 @@ import { MoreHorizontal, UserPlus, Ban, Trash2, PenLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import FormattedDate from './FormattedDate';
+import FormattedDate from '../FormattedDate';
 import { useRouter } from 'next/navigation';
 import PostEngagement from './PostEngagement';
-import { PopoverAction } from './PopoverAction';
-import { ReplyModal } from './ReplyPostModal';
+import { PopoverAction } from '../PopoverAction';
 import useAuthStore from '@/store/useAuthStore';
-import PostDeleteConfirmModal from './PostDeleteConfirmModal';
-import defaultAvatar from '../assets/avatars/default_profile_400x400.png';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import UserAvatar from '../AvatarComponents/UserAvatar';
 
 export default function PostCard({ id, content, media_urls, created_at, profiles }) {
   const router = useRouter();
@@ -44,11 +40,7 @@ export default function PostCard({ id, content, media_urls, created_at, profiles
   return (
     <div className="flex border-b border-zinc-700 gap-2 w-full p-3 pt-2 pb-1 transition-colors cursor-pointer" onClick={() => router.push(`/${profiles?.username}/status/${id}`)}>
       <div className="w-10">
-        {profiles?.avatar_url ? (
-          <Image src={profiles.avatar_url} width={40} height={40} className="w-10 h-10 rounded-full" alt={`${profiles?.display_name}'s avatar`} />
-        ) : (
-          <Image src={defaultAvatar} width={40} height={40} className="w-10 h-10 rounded-full" alt="Default avatar" />
-        )}
+        <UserAvatar src={profiles?.avatar_url} name={profiles?.display_name} size="lg" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex relative items-start justify-between">

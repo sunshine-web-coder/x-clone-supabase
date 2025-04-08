@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Button } from './ui/button';
+import { Button } from '../ui/button';
 import { supabase } from '@/lib/supabaseConfig';
 import usePostStore from '@/store/usePostStore';
 import { useToast } from '@/lib/toast-context';

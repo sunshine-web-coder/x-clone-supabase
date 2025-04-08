@@ -1,6 +1,6 @@
 'use client';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { ComposeTweet } from './compose-tweet';
+import { ComposeTweet } from '../compose-tweet';
 
 export function ReplyModal({ showReply, setShowReply, parentId, parentUsername }) {
   return (

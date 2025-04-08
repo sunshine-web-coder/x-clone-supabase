@@ -3,7 +3,7 @@
 import { useGetUserByUsername } from '@/routes/userService';
 import { useParams } from 'next/navigation';
 import React from 'react';
-import PostCard from '../PostCard';
+import PostCard from '../post/PostCard';
 
 export default function UserPosts() {
   // Get the username from the URL parameter
